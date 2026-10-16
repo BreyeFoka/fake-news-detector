@@ -1,13 +1,23 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from transformers import pipeline
+import logging
 import re
 import string
 import os
 from datetime import datetime
 
-# Initialize zero-shot classifier
-classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+MODEL_NAME = "facebook/bart-large-mnli"
+_classifier = None
+
+
+def get_classifier():
+    """Load the zero-shot model on first use, so importing the app (and testing it) stays light."""
+    global _classifier
+    if _classifier is None:
+        from transformers import pipeline
+
+        _classifier = pipeline("zero-shot-classification", model=MODEL_NAME)
+    return _classifier
 
 # Flask setup
 app = Flask(__name__)
@@ -36,7 +46,7 @@ def health_check():
     return jsonify({
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
-        "model": "facebook/bart-large-mnli"
+        "model": MODEL_NAME
     })
 
 # Check if server is running fine
@@ -48,7 +58,7 @@ def checkHealth():
 def predict():
     """Main prediction endpoint"""
     try:
-        data = request.json
+        data = request.get_json(silent=True)
         if not data:
             return jsonify({"error": "No data provided"}), 400
         
@@ -65,7 +75,7 @@ def predict():
             return jsonify({"error": "Text too short for meaningful analysis"}), 400
         
         # Zero-shot classification
-        result = classifier(full_text, candidate_labels=["Real", "Fake"])
+        result = get_classifier()(full_text, candidate_labels=["Real", "Fake"])
         
         prediction = result["labels"][0].lower()  # top label
         confidence = round(result["scores"][0] * 100, 2)  # top score as percentage
@@ -80,10 +90,9 @@ def predict():
             }
         })
         
-    except Exception as e:
-        response = jsonify({"error": f"Internal server error: {str(e)}"})
-        response.status_code = 500
-        return response
+    except Exception:
+        logging.exception("Prediction failed")
+        return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

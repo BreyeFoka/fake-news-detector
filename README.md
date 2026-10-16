@@ -1,4 +1,4 @@
-# 🧠 Fake News Detection Machine Learning Project
+# 🧠 Fake News Detector
 
 A modern web application that uses AI to detect fake news articles. Built with Flask (backend), Next.js (frontend), and powered by HuggingFace's BART Large MNLI model.
 
@@ -9,7 +9,7 @@ A modern web application that uses AI to detect fake news articles. Built with F
 - **Real-time Analysis**: Instant prediction results with confidence scores
 - **Analysis History**: Keep track of recent predictions
 - **Clean API**: RESTful backend with proper error handling
-- **Production Ready**: Configured for easy deployment to Heroku, Vercel, and other platforms
+- **Deployment configs**: `render.yaml` for the API and Vercel for the frontend
 
 ## 🛠️ Tech Stack
 
@@ -209,13 +209,17 @@ Response:
 ### Running Tests
 
 ```bash
-# Backend tests
+pip install -r requirements-dev.txt
 python -m pytest
-
-# Frontend tests
-cd frontend
-npm test
 ```
+
+The API tests use a stub in place of the BART model, so they run in under a second without downloading it. They cover text cleaning, the health check, predictions and input validation. GitHub Actions runs them and builds the frontend on every push.
+
+## ⚠️ Limitations
+
+- **Zero-shot, not trained for this task.** The API asks BART-MNLI whether the text reads more like "Real" or "Fake". It doesn't check facts or sources, and it hasn't been evaluated on a labelled fake-news dataset.
+- **Confidence is the model's label preference,** not the probability that the article is true.
+- The notebooks explore models trained on `news/news.csv`; the API doesn't use them.
 
 ## 🤝 Contributing
 
