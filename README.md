@@ -76,7 +76,7 @@ A modern web application that uses AI to detect fake news articles. Built with F
 
 2. **Install dependencies:**
    ```bash
-   npm install
+   pnpm install
    # or
    yarn install
    ```
@@ -89,7 +89,7 @@ A modern web application that uses AI to detect fake news articles. Built with F
 
 4. **Run the development server:**
    ```bash
-   npm run dev
+   pnpm dev
    # or
    yarn dev
    ```
